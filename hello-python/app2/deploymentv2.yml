@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-python-service
+spec:
+  selector:
+    app: hello-python
+  ports:
+  - protocol: "TCP"
+    port: 5000
+    targetPort: 5000
+  type: LoadBalancer
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-python
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: hello-python
+  template:
+    metadata:
+      labels:
+        app: hello-python
+      
+    spec:
+      containers:
+      - name: hello-python
+        image: 664606876022.dkr.ecr.us-east-1.amazonaws.com/capstone_p5:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
