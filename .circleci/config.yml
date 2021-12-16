@@ -1,0 +1,203 @@
+version: 2.1 
+  
+commands:
+  destroy-cluster:
+    description: Destroy EKS Cluster.
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            eksctl delete cluster --name flask-app-capstone
+    
+  undo-deployment:
+    description: Undo rollback.
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+             kubectl rollout undo deploy flask-app-deployment -n flask-namespace
+             
+  install-kubectl-and-eksctl:
+    description: Undo rollback.
+    steps:
+      - run:
+          name: Installing kubectl and eksctl
+          command: |
+                  yum install tar gzip -y
+                  curl --silent --location -o /usr/local/bin/kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+                  chmod +x /usr/local/bin/kubectl
+                  mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+                  kubectl version --client
+          
+                  curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                  mv /tmp/eksctl /usr/local/bin
+                  eksctl version         
+
+jobs:
+  lint-app:
+    docker:
+      - image: python:3.7.3-stretch
+    steps:
+      - checkout
+      - run:
+          name: Dockerfiles lint
+          command: |
+                #make install
+                wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+                chmod +x /bin/hadolint
+                pip install pylint
+                make lint
+
+  build-push-flask-appv1:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build docker container
+          command: |
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip awscliv2.zip
+                sudo ./aws/install
+                pwd
+                ls
+                cd ./environment/hello-python/app
+                docker build -t flask-app .
+                docker images --filter reference=flask-app
+                docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ECR_URL
+                docker tag flask-app $AWS_ECR_URL/flask_app:v1
+                docker push $AWS_ECR_URL/flask_app:v1
+  create-eks-cluster-deploy-app:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - install-kubectl-and-eksctl
+      - run:
+          name: Creating K8S cluster
+          command: |
+                  eksctl create cluster \
+                  --name flask-app-capstone \
+                  --region us-east-1 \
+                  --with-oidc \
+                  --ssh-access \
+                  --ssh-public-key udacity
+                  kubectl get nodes -o wide
+                  kubectl create namespace flask-namespace
+                  aws eks update-kubeconfig --name flask-app-capstone --region us-east-1
+      - run:
+          name: Deploying flask-appv1
+          command: |
+              cd ./environment/hello-python/kubernetes
+              kubectl apply -f deployment.yml
+      - destroy-cluster
+                 
+  smoke-test-v1:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Installing dependencies
+          command: |
+                  yum install jq -y
+      - install-kubectl-and-eksctl
+      - run:
+          name: Creating K8S cluster
+          command: |
+                URL=$(kubectl get svc hello-python-service -n flask-namespace -o json | jq -r .status.loadBalancer.ingress[0].hostname)
+                curl -s ${URL} --output flask-app.txt
+                if flask-app.txt grep "Hello" then;
+                echo working working
+                    exit 0
+                else
+                    echo not working
+                    exit 1
+                fi
+      - destroy-cluster
+     
+      
+  build-push-flask-appv2:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build docker container
+          command: |
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip awscliv2.zip
+                sudo ./aws/install
+                pwd
+                ls
+                cd ./environment/hello-python/app2
+                docker build -t flask-app-capstonev2 .
+                docker images --filter reference=flask-app-capstonev2
+                docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ECR_URL
+                docker tag flask-app:latest $AWS_ECR_URL/flask_app:latest
+                docker push $AWS_ECR_URL/flask_app:latest
+    
+  rolling-deployment:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - install-kubectl-and-eksctl
+      - run:
+          name: Rolling out Application
+          command: |
+                aws eks --region us-east-1 update-kubeconfig --name flask-app-capstone
+                cd ./environment/hello-python/app2
+                kubectl apply -f deploymentv2.yml
+                kubectl rollout status deployment/hello-python -n flask-namespace
+                kubectl get pods,rs,deploy,svc -o wide --show-labels
+     
+  smoke-test-v2:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Installing dependencies
+          command: |
+                  yum install jq -y
+      - install-kubectl-and-eksctl
+      - run:
+          name: Creating K8S cluster
+          command: |
+                URL=$(kubectl get svc hello-python-service -n flask-namespace -o json | jq -r .status.loadBalancer.ingress[0].hostname)
+                curl -s ${URL} --output flask-app.txt
+                if flask-app.txt grep "Hello" then;
+                echo working working
+                    exit 0
+                else
+                    echo not working
+                    exit 1
+                fi
+      - undo-deployment
+ 
+            
+workflows:
+  test_and_deploy:
+    jobs:
+      - lint-app
+      - build-push-flask-appv1:
+          requires:
+            - lint-app
+      - create-eks-cluster-deploy-app:
+          requires:
+            - build-push-flask-appv1
+      - smoke-test-v1:
+          requires:
+            - create-eks-cluster-deploy-app
+      - build-push-flask-appv2:
+          requires:
+            - deploy-production
+      - rolling-deployment:
+          requires:
+            - create-eks-cluster-deploy-app
+            - build-push-flask-appv2
+            - smoke-test-v1
+      - smoke-test-v2:
+          requires:
+            - rolling-deployment
