@@ -192,7 +192,7 @@ workflows:
             - create-eks-cluster-deploy-app
       - build-push-flask-appv2:
           requires:
-            - deploy-production
+            - smoke-test-v1
       - rolling-deployment:
           requires:
             - create-eks-cluster-deploy-app
