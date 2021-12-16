@@ -1,17 +1,10 @@
-setup:
-	# Create python virtualenv & source it
-	# source ~/.devops/python3 -m venvbin/activate
-	python3 -m venv ~/.p5
+
 
 install:
 	# This should be run from inside a virtualenv
 	pip install --upgrade pip &&\
 		pip install -r requirements.txt
 
-test:
-	# Additional, optional, tests could go here
-	#python -m pytest -vv --cov=myrepolib tests/*.py
-	#python -m pytest --nbval notebook.ipynb
 
 lint:
 	# See local hadolint install instructions:   https://github.com/hadolint/hadolint
@@ -23,4 +16,4 @@ lint:
 	# This should be run from inside a virtualenv
 	pylint --disable=R,C,W1203,W1309,DL3020 app.py
 
-all: install lint test
+all: install lint 
