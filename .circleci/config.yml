@@ -106,9 +106,6 @@ jobs:
       - run:
           name: Creating K8S cluster
           command: |
-                mkdir -p $HOME/.kube
-                sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-                sudo chown $(id -u):$(id -g) $HOME/.kube/config
                 URL=$(kubectl get svc hello-python-service -n flask-namespace -o json | jq -r .status.loadBalancer.ingress[0].hostname)
                 curl -s ${URL} --output flask-app.txt
                 if flask-app.txt grep "Hello" then;
@@ -118,7 +115,7 @@ jobs:
                     echo not working
                     exit 1
                 fi
-      - destroy-cluster
+      #destroy-cluster
      
       
   build-push-flask-appv2:
