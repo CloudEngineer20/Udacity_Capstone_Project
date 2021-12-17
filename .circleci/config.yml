@@ -66,8 +66,8 @@ jobs:
                 docker build -t flask-app .
                 docker images --filter reference=flask-app
                 docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ECR_URL
-                docker tag flask-app $AWS_ECR_URL/flask_app:v1
-                docker push $AWS_ECR_URL/flask_app:v1
+                docker tag flask-app $AWS_ECR_URL/capstone_p5:v1
+                docker push $AWS_ECR_URL/capstone_p5:v1
   create-eks-cluster-deploy-app:
     docker:
       - image: amazon/aws-cli
@@ -130,12 +130,12 @@ jobs:
                 sudo ./aws/install
                 pwd
                 ls
-                cd ./environment/hello-python/app2
+                cd hello-python/app2
                 docker build -t flask-app-capstonev2 .
                 docker images --filter reference=flask-app-capstonev2
                 docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ECR_URL
-                docker tag flask-app:latest $AWS_ECR_URL/flask_app:latest
-                docker push $AWS_ECR_URL/flask_app:latest
+                docker tag flask-app-capstonev2:latest $AWS_ECR_URL/capstone_p5:latest
+                docker push $AWS_ECR_URL/capstone_p5:latest
     
   rolling-deployment:
     docker:
