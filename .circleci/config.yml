@@ -8,7 +8,7 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            eksctl delete cluster --name flask-app-capstone
+            eksctl delete cluster --name flask-app-capstone3
     
   undo-deployment:
     description: Undo rollback.
@@ -78,14 +78,14 @@ jobs:
           name: Creating K8S cluster
           command: |
                   eksctl create cluster \
-                  --name flask-app-capstone \
+                  --name flask-app-capstone3 \
                   --region us-east-1 \
                   --with-oidc \
                   --ssh-access \
                   --ssh-public-key udacity
                   kubectl get nodes -o wide
                   kubectl create namespace flask-namespace
-                  aws eks update-kubeconfig --name flask-app-capstone --region us-east-1
+                  aws eks update-kubeconfig --name flask-app-capstone3 --region us-east-1
       - run:
           name: Deploying flask-appv1
           command: |
@@ -107,7 +107,8 @@ jobs:
                 sudo ./aws/install
                 pwd
                 ls
-                cd hello-python/app2
+                cd hello-python 
+                cd app2
                 docker build -t flask-app-capstonev2 .
                 docker images --filter reference=flask-app-capstonev2
                 docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ECR_URL
