@@ -106,6 +106,7 @@ jobs:
       - run:
           name: Creating K8S cluster
           command: |
+                cd hello-python/app1/kubernetes
                 URL=$(kubectl get svc hello-python-service -n flask-namespace -o json | jq -r .status.loadBalancer.ingress[0].hostname)
                 curl -s ${URL} --output flask-app.txt
                 if flask-app.txt grep "Hello" then;
