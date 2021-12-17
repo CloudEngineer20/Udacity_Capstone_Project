@@ -62,7 +62,7 @@ jobs:
                 sudo ./aws/install
                 pwd
                 ls
-                cd ./environment/hello-python/app
+                cd ./hello-python/app1
                 docker build -t flask-app .
                 docker images --filter reference=flask-app
                 docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ECR_URL
