@@ -124,8 +124,8 @@ jobs:
       - run:
           name: Rolling out Application
           command: |
-                aws eks --region us-east-1 update-kubeconfig --name flask-app-capstone
-                cd ./environment/hello-python/app2
+                aws eks --region us-east-1 update-kubeconfig --name flask-app-capstone5
+                cd hello-python/app2
                 kubectl apply -f deploymentv2.yml
                 kubectl rollout status deployment/hello-python -n flask-namespace
                 kubectl get pods,rs,deploy,svc -o wide --show-labels
