@@ -140,7 +140,7 @@ workflows:
       - create-eks-cluster-deploy-appv1:
           requires:
             - build-push-flask-appv1
-      - build-push-flask-appv2:
+      - build-push-flask-appv2
       - rolling-deployment:
           requires:
             - create-eks-cluster-deploy-appv1
