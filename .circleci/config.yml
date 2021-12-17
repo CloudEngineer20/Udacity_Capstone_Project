@@ -8,7 +8,7 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            eksctl delete cluster --name flask-app-capstone1
+            eksctl delete cluster --name flask-app-capstone2
     
   undo-deployment:
     description: Undo rollback.
@@ -78,14 +78,14 @@ jobs:
           name: Creating K8S cluster
           command: |
                   eksctl create cluster \
-                  --name flask-app-capstone1 \
+                  --name flask-app-capstone2 \
                   --region us-east-1 \
                   --with-oidc \
                   --ssh-access \
                   --ssh-public-key udacity
                   kubectl get nodes -o wide
                   kubectl create namespace flask-namespace
-                  aws eks update-kubeconfig --name flask-app-capstone1 --region us-east-1
+                  aws eks update-kubeconfig --name flask-app-capstone2 --region us-east-1
       - run:
           name: Deploying flask-appv1
           command: |
@@ -106,7 +106,7 @@ jobs:
       - run:
           name: Creating K8S cluster
           command: |
-                URL=$(kubectl get svc hello-python-service -n flask-namespace -o json | jq -r .status.loadBalancer.ingress[0].hostname)
+                URL=$(kubectl get svc hello-python-service -o json | jq -r .status.loadBalancer.ingress[0].hostname)
                 curl -s ${URL} --output flask-app.txt
                 if flask-app.txt grep "Hello" then;
                 echo working working
