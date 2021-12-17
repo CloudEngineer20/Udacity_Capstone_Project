@@ -68,7 +68,7 @@ jobs:
                 docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION) $AWS_ECR_URL
                 docker tag flask-app $AWS_ECR_URL/capstone_p5:v1
                 docker push $AWS_ECR_URL/capstone_p5:v1
-  create-eks-cluster-deploy-app:
+  create-eks-cluster-deploy-appvi:
     docker:
       - image: amazon/aws-cli
     steps:
@@ -89,7 +89,7 @@ jobs:
       - run:
           name: Deploying flask-appv1
           command: |
-              cd ./environment/hello-python/kubernetes
+              cd hello-python/app1/kubernetes
               kubectl apply -f deployment.yml
       - destroy-cluster
                  
