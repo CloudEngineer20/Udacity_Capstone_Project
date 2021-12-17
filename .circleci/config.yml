@@ -90,7 +90,7 @@ jobs:
           name: Deploying flask-appv1
           command: |
               cd hello-python/app1/kubernetes
-              kubectl apply -f deployment.yml
+              kubectl apply -f deployment.yaml
       - destroy-cluster
                  
   smoke-test-v1:
