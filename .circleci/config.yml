@@ -127,7 +127,7 @@ jobs:
                 aws eks --region us-east-1 update-kubeconfig --name flask-app-capstone8
                 cd hello-python/app2
                 kubectl apply -f deploymentv2.yml
-                kubectl rollout status deployment.apps/hello-python 
+                kubectl rollout status deployment/hello-python 
                 kubectl get pods,rs,deploy,svc -o wide --show-labels
  
             
