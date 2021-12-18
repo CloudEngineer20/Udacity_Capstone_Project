@@ -7,7 +7,7 @@ These include:
 - Building Kubernetes clusters
 - Building Docker containers in pipeline
 
-##Overview on the Project
+## Overview on the Project
 This project entails using CircleCI pipeline to deploy a sample hello-python app to EKS cluster.
 The distinct steps of the project are includes;
 
@@ -15,4 +15,4 @@ The distinct steps of the project are includes;
 - build-push-flask-appv1 - containerizes and pushes the appv1 (app's old version) to ECR
 - create-eks-cluster-deploy-app: creates an eks cluster and deploys the appv1
 - build-push-flask-appv2 - containerizes and pushes appv2 (app's new version) to ECR
-- rolling-deployment - rolls out appv2 with the 5 lambda docker containers
+- rolling-deployment - rolls out appv2 incrementally replacing the resource's Pods with new ones, which are then scheduled on nodes with available resources
